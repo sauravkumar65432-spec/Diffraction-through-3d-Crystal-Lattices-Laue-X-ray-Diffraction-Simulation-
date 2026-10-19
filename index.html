@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laue X-Ray Diffraction Virtual Lab | 3D Crystal Lattices</title>
+    <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-sky-500/30">
+
+    <!-- Header & Navigation -->
+    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md px-4 py-2.5">
+        <div class="max-w-[1700px] mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-sky-600 to-indigo-500 flex items-center justify-center shadow-md shadow-sky-500/20 text-white font-black text-lg">
+                    λ
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-white flex items-center gap-2">
+                        Laue X-Ray Diffraction Virtual Lab
+                        <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">3D Crystallography</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Polychromatic X-Ray Diffraction Through 3D Lattices & Reciprocal Ewald Construction</p>
+                </div>
+            </div>
+
+            <!-- Main Navigation Tabs -->
+            <nav class="flex items-center space-x-1 bg-slate-950/60 p-1 rounded-lg border border-slate-800 text-xs font-medium">
+                <button class="main-nav-tab px-3.5 py-1.5 rounded-md transition-all border-b-2 border-sky-500 text-sky-400 font-semibold" data-tab="bench">
+                    🔬 Lab Bench
+                </button>
+                <button class="main-nav-tab px-3.5 py-1.5 rounded-md transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-200" data-tab="experiments">
+                    📋 Guided Experiments
+                </button>
+                <button class="main-nav-tab px-3.5 py-1.5 rounded-md transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-200" data-tab="theory">
+                    📖 Theory & Formulas
+                </button>
+                <button class="main-nav-tab px-3.5 py-1.5 rounded-md transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-200" data-tab="table">
+                    📊 Reflections Table
+                </button>
+            </nav>
+
+            <div class="flex items-center space-x-2 text-xs">
+                <span id="badge-geom" class="px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 font-mono border border-indigo-500/30 font-semibold">
+                    TRANSMISSION
+                </span>
+                <span id="summary-spot-count" class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30 font-semibold">
+                    Computing...
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-[1700px] w-full mx-auto p-4 flex flex-col">
+
+        <!-- TAB 1: INTERACTIVE LAB BENCH -->
+        <section id="tab-section-bench" class="tab-section flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- LEFT COLUMN: INSTRUMENT CONTROLS -->
+            <div class="lg:col-span-3 space-y-4">
+                
+                <!-- Sample & Crystal Selector Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-xs font-bold text-sky-400 tracking-wider uppercase flex items-center gap-1.5">
+                            <span>💎</span> Crystal Sample
+                        </h2>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Crystal Structure</label>
+                            <select id="crystal-select" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+                                <option value="Si" selected>Silicon (Si) - Diamond Cubic</option>
+                                <option value="Al_FCC">Aluminum (Al) - FCC Metal</option>
+                                <option value="Fe_BCC">Alpha-Iron (Fe) - BCC Metal</option>
+                                <option value="NaCl">Rock Salt (NaCl) - FCC Ionic</option>
+                                <option value="CsCl">Cesium Chloride (CsCl) - SC Basis</option>
+                                <option value="Mg_HCP">Magnesium (Mg) - HCP</option>
+                                <option value="SrTiO3">Strontium Titanate - Perovskite</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Lattice Constant (a)</span>
+                                <span class="font-mono text-sky-400"><span id="param-a-val">5.431</span> Å</span>
+                            </div>
+                            <input id="param-a" type="range" min="2.5" max="7.0" step="0.005" value="5.431">
+                        </div>
+
+                        <p id="crystal-desc" class="text-[11px] text-slate-400 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+                            Semiconductor standard. Exhibits diamond cubic extinction rules (h,k,l all unmixed, and if all even, h+k+l = 4n).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- X-Ray Generator Controls Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-xs font-bold text-amber-400 tracking-wider uppercase flex items-center gap-1.5">
+                            <span>⚡</span> X-Ray Tube Generator
+                        </h2>
+                        <span class="text-[11px] font-mono text-slate-400">Bremsstrahlung</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Accelerating Voltage (V)</span>
+                                <span class="font-mono text-amber-400 font-semibold"><input id="input-voltage" type="number" min="10" max="60" value="35" class="w-12 bg-slate-950 border border-slate-700 text-right px-1 rounded text-xs text-amber-400"> kV</span>
+                            </div>
+                            <input id="slider-voltage" type="range" min="10" max="60" step="1" value="35">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+                                <div class="text-slate-400 text-[11px]">Duane-Hunt λ_min</div>
+                                <div class="font-mono text-amber-400 font-bold text-sm"><span id="dh-min-val">0.354</span> Å</div>
+                                <div class="text-[10px] text-slate-400">hc / eV</div>
+                            </div>
+                            <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+                                <div class="text-slate-400 text-[11px]">Upper Cutoff λ_max</div>
+                                <div class="font-mono text-sky-400 font-bold text-sm"><span id="lmax-val">2.20</span> Å</div>
+                                <div class="text-[10px] text-slate-400">Absorption limit</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Adjust λ_max (Bandwidth)</span>
+                            </div>
+                            <input id="slider-lmax" type="range" min="1.0" max="3.0" step="0.05" value="2.20">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goniometer Orientation Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-xs font-bold text-emerald-400 tracking-wider uppercase flex items-center gap-1.5">
+                            <span>🧭</span> 3-Axis Goniometer
+                        </h2>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Azimuth Phi -->
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Azimuth (φ)</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="gonio-step-btn px-1 bg-slate-800 hover:bg-slate-700 rounded text-[10px]" data-axis="phi" data-step="-5">-5°</button>
+                                    <span id="phi-val" class="font-mono text-emerald-400 w-10 text-center">0°</span>
+                                    <button class="gonio-step-btn px-1 bg-slate-800 hover:bg-slate-700 rounded text-[10px]" data-axis="phi" data-step="5">+5°</button>
+                                </div>
+                            </div>
+                            <input id="slider-phi" type="range" min="0" max="360" step="1" value="0">
+                        </div>
+
+                        <!-- Tilt Chi -->
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Tilt (χ)</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="gonio-step-btn px-1 bg-slate-800 hover:bg-slate-700 rounded text-[10px]" data-axis="chi" data-step="-5">-5°</button>
+                                    <span id="chi-val" class="font-mono text-emerald-400 w-10 text-center">0°</span>
+                                    <button class="gonio-step-btn px-1 bg-slate-800 hover:bg-slate-700 rounded text-[10px]" data-axis="chi" data-step="5">+5°</button>
+                                </div>
+                            </div>
+                            <input id="slider-chi" type="range" min="-90" max="90" step="0.5" value="0">
+                        </div>
+
+                        <!-- Spindle Omega -->
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Rotation (ω)</span>
+                                <div class="flex items-center gap-1">
+                                    <button class="gonio-step-btn px-1 bg-slate-800 hover:bg-slate-700 rounded text-[10px]" data-axis="omega" data-step="-5">-5°</button>
+                                    <span id="omega-val" class="font-mono text-emerald-400 w-10 text-center">0°</span>
+                                    <button class="gonio-step-btn px-1 bg-slate-800 hover:bg-slate-700 rounded text-[10px]" data-axis="omega" data-step="5">+5°</button>
+                                </div>
+                            </div>
+                            <input id="slider-omega" type="range" min="-180" max="180" step="1" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Geometry & Detector Settings Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-xs font-bold text-purple-400 tracking-wider uppercase flex items-center gap-1.5">
+                            <span>📐</span> Camera Geometry
+                        </h2>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Diffraction Mode</label>
+                            <select id="geometry-select" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500">
+                                <option value="transmission" selected>Transmission Laue (Film behind sample)</option>
+                                <option value="back-reflection">Back-Reflection Laue (Film facing source)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                <span>Distance to Film (D)</span>
+                                <span class="font-mono text-purple-400"><span id="dist-val">40.0</span> mm</span>
+                            </div>
+                            <input id="slider-dist" type="range" min="20" max="80" step="1" value="40">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MIDDLE COLUMN: 3D REAL & RECIPROCAL VISUALIZER -->
+            <div class="lg:col-span-5 flex flex-col space-y-4">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex-1 flex flex-col shadow-sm min-h-[460px]">
+                    
+                    <!-- 3D Header Toolbar -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-800">
+                        <div class="flex items-center space-x-1.5">
+                            <button class="btn-3d-mode px-3 py-1 rounded text-xs font-medium border border-sky-500/50 bg-sky-500/30 text-sky-300 transition-colors" data-mode="real">
+                                Real Lattice
+                            </button>
+                            <button class="btn-3d-mode px-3 py-1 rounded text-xs font-medium border border-transparent text-slate-400 hover:text-slate-200 transition-colors" data-mode="reciprocal">
+                                Reciprocal & Ewald
+                            </button>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button id="btn-reset-3d" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 transition-colors">
+                                Reset View
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3D Canvas Box -->
+                    <div class="canvas-wrapper flex-1 rounded-lg overflow-hidden border border-slate-800/80 bg-slate-950">
+                        <canvas id="canvas-3d"></canvas>
+                    </div>
+
+                    <!-- Plane Slice / Miller Index Inspector bar -->
+                    <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <label class="flex items-center space-x-1.5 text-slate-300 cursor-pointer">
+                            <input id="toggle-show-plane" type="checkbox" class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-0">
+                            <span>Highlight Plane (h k l):</span>
+                        </label>
+                        <div class="flex items-center space-x-1.5 font-mono">
+                            <input id="plane-h" type="number" value="1" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-center text-xs text-sky-400">
+                            <input id="plane-k" type="number" value="1" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-center text-xs text-sky-400">
+                            <input id="plane-l" type="number" value="1" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-center text-xs text-sky-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spot Crystallography Inspector Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-bold text-sky-400 tracking-wider uppercase flex items-center gap-1.5">
+                            <span>🔍</span> Reflection Crystallography Inspector
+                        </h3>
+                    </div>
+                    <div id="inspector-card">
+                        <div class="text-center py-5 text-slate-500 text-xs">
+                            Hover over or click any diffraction spot on the film to view crystallographic indices, Bragg wavelength, and interplanar spacing.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: LAUE DETECTOR SCREEN / PHOTOGRAPHIC FILM -->
+            <div class="lg:col-span-4 flex flex-col space-y-4">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex-1 flex flex-col shadow-sm min-h-[460px]">
+                    
+                    <!-- Detector Controls Header -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-800">
+                        <div class="flex items-center space-x-1.5">
+                            <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                                Simulated Film Screen
+                            </h2>
+                        </div>
+
+                        <div class="flex items-center space-x-1.5 text-xs">
+                            <select id="film-mode-select" class="bg-slate-950 border border-slate-700 text-slate-300 rounded px-2 py-0.5 text-[11px]">
+                                <option value="positive" selected>Darkroom Glow</option>
+                                <option value="negative">Exposed Film (Negative)</option>
+                            </select>
+                            <button id="btn-export-png" class="px-2 py-0.5 rounded bg-sky-600 hover:bg-sky-500 text-white font-medium text-[11px] flex items-center gap-1 shadow-sm">
+                                <span>📷</span> Save
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Detector Canvas Wrapper -->
+                    <div class="canvas-wrapper flex-1 rounded-lg overflow-hidden border border-slate-800/80 bg-slate-950">
+                        <canvas id="canvas-detector"></canvas>
+                    </div>
+
+                    <!-- Film Overlays & Gain Toolbar -->
+                    <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+                        <div class="flex items-center space-x-3">
+                            <label class="flex items-center space-x-1.5 cursor-pointer">
+                                <input id="toggle-zone-curves" type="checkbox" checked class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-0">
+                                <span>Zone Conics</span>
+                            </label>
+                            <label class="flex items-center space-x-1.5 cursor-pointer">
+                                <input id="toggle-greninger" type="checkbox" class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-0">
+                                <span>Greninger Net</span>
+                            </label>
+                            <label class="flex items-center space-x-1.5 cursor-pointer">
+                                <input id="toggle-grid" type="checkbox" checked class="rounded bg-slate-800 border-slate-700 text-sky-500 focus:ring-0">
+                                <span>Scale Grid</span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <span class="text-slate-400 text-[11px]">Exposure:</span>
+                            <input id="slider-exposure-gain" type="range" min="0.3" max="3.0" step="0.1" value="1.0" class="w-16">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legend & Instructions Badge -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 space-y-1.5">
+                    <div class="font-bold text-slate-200 flex items-center justify-between">
+                        <span>Photographic Interpretation</span>
+                        <span class="text-[10px] text-sky-400 font-mono">D = 40 mm</span>
+                    </div>
+                    <p class="text-[11px] leading-relaxed">
+                        Spots that lie along smooth conic sections (ellipses or hyperbolas) belong to crystal planes intersecting the same crystallographic <span class="text-sky-300 font-semibold">zone axis [uvw]</span>.
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- TAB 2: GUIDED EXPERIMENTS -->
+        <section id="tab-section-experiments" class="tab-section hidden flex-1 flex flex-col space-y-4">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <span>🧪</span> Virtual Laboratory Protocols & Guided Investigations
+                        </h2>
+                        <p class="text-xs text-slate-400">Structured inquiry experiments in X-ray crystallography and Laue diffraction</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2 text-xs">
+                        <button class="lab-tab-btn px-3 py-1.5 rounded-lg border border-sky-500/50 bg-sky-500/20 text-sky-400 font-semibold transition-colors" data-lab="lab1">
+                            Lab 1: Crystal Symmetry
+                        </button>
+                        <button class="lab-tab-btn px-3 py-1.5 rounded-lg border border-transparent text-slate-400 hover:text-slate-200 transition-colors" data-lab="lab2">
+                            Lab 2: Duane-Hunt Limit
+                        </button>
+                        <button class="lab-tab-btn px-3 py-1.5 rounded-lg border border-transparent text-slate-400 hover:text-slate-200 transition-colors" data-lab="lab3">
+                            Lab 3: Systematic Extinctions
+                        </button>
+                        <button class="lab-tab-btn px-3 py-1.5 rounded-lg border border-transparent text-slate-400 hover:text-slate-200 transition-colors" data-lab="lab4">
+                            Lab 4: Blind Orientation Challenge
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LAB 1 CONTENT: SYMMETRY & ZONE AXES -->
+                <div id="pane-lab1" class="lab-content-pane space-y-4">
+                    <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+                        <h3 class="text-base font-bold text-sky-400 mb-2">Experiment 1: Identifying Crystal Symmetries & Zone Axes</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                            In Laue diffraction, when the incident X-ray beam is aligned parallel to a major crystallographic symmetry axis, the diffraction pattern displays the rotational symmetry of that axis (Friedel's law also adds an inversion center). For a cubic crystal:
+                            <br>• The <strong class="text-sky-300">[001]</strong> direction has <strong class="text-sky-300">4-fold</strong> rotational symmetry (square spot layout).
+                            <br>• The <strong class="text-sky-300">[110]</strong> direction has <strong class="text-sky-300">2-fold</strong> rotational symmetry (rhomb/mirror symmetry).
+                            <br>• The <strong class="text-sky-300">[111]</strong> direction has <strong class="text-sky-300">3-fold</strong> rotational symmetry (hexagonal/trigonal arrangement).
+                        </p>
+
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button id="btn-align-001" class="px-3.5 py-1.5 bg-sky-600/30 hover:bg-sky-600/50 border border-sky-500/40 rounded-lg text-xs font-mono text-sky-300">
+                                🎯 Align Beam along [001]
+                            </button>
+                            <button id="btn-align-110" class="px-3.5 py-1.5 bg-sky-600/30 hover:bg-sky-600/50 border border-sky-500/40 rounded-lg text-xs font-mono text-sky-300">
+                                🎯 Align Beam along [110]
+                            </button>
+                            <button id="btn-align-111" class="px-3.5 py-1.5 bg-sky-600/30 hover:bg-sky-600/50 border border-sky-500/40 rounded-lg text-xs font-mono text-sky-300">
+                                🎯 Align Beam along [111]
+                            </button>
+                        </div>
+
+                        <div class="space-y-2 bg-slate-900/60 p-3 rounded-lg border border-slate-800 text-xs">
+                            <div class="font-bold text-slate-200">Investigation Checklist:</div>
+                            <label class="flex items-center space-x-2 text-slate-300">
+                                <input id="check-l1-001" type="checkbox" disabled class="rounded bg-slate-800 text-sky-500">
+                                <span>Align [001] zone axis and verify 4-fold rotational symmetry</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-slate-300">
+                                <input id="check-l1-110" type="checkbox" disabled class="rounded bg-slate-800 text-sky-500">
+                                <span>Align [110] zone axis and verify 2-fold mirror symmetry</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-slate-300">
+                                <input id="check-l1-111" type="checkbox" disabled class="rounded bg-slate-800 text-sky-500">
+                                <span>Align [111] zone axis and verify 3-fold trigonal symmetry</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LAB 2 CONTENT: DUANE-HUNT LAW & PLANCK'S CONSTANT -->
+                <div id="pane-lab2" class="lab-content-pane hidden space-y-4">
+                    <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+                        <h3 class="text-base font-bold text-amber-400 mb-2">Experiment 2: Duane-Hunt Limit & Measuring Planck's Constant</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed mb-3">
+                            The shortest wavelength produced by an X-ray tube operating at voltage \(V\) is given by the Duane-Hunt law:
+                            \[\lambda_{\min} = \frac{hc}{eV}\]
+                            By recording the minimum wavelength \(\lambda_{\min}\) as a function of accelerating tube voltage \(V\), you can plot \(1/\lambda_{\min}\) vs \(V\) to determine Planck's constant \(h\)!
+                        </p>
+
+                        <div class="flex items-center gap-3 mb-4">
+                            <button id="btn-record-dh" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold shadow-md flex items-center gap-1.5">
+                                <span>📝</span> Record Current (V, λ_min) Data Point
+                            </button>
+                            <button id="btn-clear-dh" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">
+                                Clear Data
+                            </button>
+                            <span id="dh-calc-slope" class="text-xs text-slate-300 font-mono bg-slate-900 px-3 py-1 rounded border border-slate-800">
+                                Record at least 2 points to calculate Planck constant.
+                            </span>
+                        </div>
+
+                        <!-- Data Table -->
+                        <div class="overflow-x-auto border border-slate-800 rounded-lg max-h-56">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-900 text-slate-400 border-b border-slate-800 font-mono uppercase text-[10px]">
+                                    <tr>
+                                        <th class="p-2">#</th>
+                                        <th class="p-2">Voltage V (kV)</th>
+                                        <th class="p-2">λ_min (Å)</th>
+                                        <th class="p-2">1/λ_min (Å⁻¹)</th>
+                                        <th class="p-2">Active Spot Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dh-data-body">
+                                    <tr>
+                                        <td colspan="5" class="p-3 text-center text-slate-500">No data recorded yet. Adjust voltage on the left panel and click "Record Current Data Point".</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LAB 3 CONTENT: SYSTEMATIC EXTINCTIONS -->
+                <div id="pane-lab3" class="lab-content-pane hidden space-y-4">
+                    <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+                        <h3 class="text-base font-bold text-emerald-400 mb-2">Experiment 3: Structure Factor Extinctions & Bravais Lattices</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                            Constructive interference occurs only when the structure factor \(F(h,k,l) \ne 0\). Due to destructive phase cancellations between basis atoms, certain classes of reflections are strictly forbidden:
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs mb-4">
+                            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                                <div class="font-bold text-sky-400 mb-1">Face-Centered Cubic (FCC)</div>
+                                <div class="text-slate-300 mb-2">Rule: \(h, k, l\) must be all unmixed (all even or all odd).</div>
+                                <div class="font-mono text-[11px] text-slate-400">Allowed: (111), (200), (220)<br>Forbidden: (100), (110), (210)</div>
+                            </div>
+                            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                                <div class="font-bold text-emerald-400 mb-1">Body-Centered Cubic (BCC)</div>
+                                <div class="text-slate-300 mb-2">Rule: \(h + k + l\) must be even.</div>
+                                <div class="font-mono text-[11px] text-slate-400">Allowed: (110), (200), (211)<br>Forbidden: (100), (111), (210)</div>
+                            </div>
+                            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                                <div class="font-bold text-purple-400 mb-1">Diamond Cubic (Si, C)</div>
+                                <div class="text-slate-300 mb-2">Rule: Unmixed, and if all even, \(h+k+l = 4n\).</div>
+                                <div class="font-mono text-[11px] text-slate-400">Allowed: (111), (220), (311)<br>Forbidden: (200), (222)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LAB 4 CONTENT: BLIND INDEXING CHALLENGE -->
+                <div id="pane-lab4" class="lab-content-pane hidden space-y-4">
+                    <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800/80">
+                        <h3 class="text-base font-bold text-purple-400 mb-2">Experiment 4: Blind Crystal Orientation & Indexing Challenge</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                            In real materials science laboratories, single crystals are mounted in arbitrary unknown orientations. The crystallographer must rotate the goniometer and interpret the intersecting zone conics to orient the specimen!
+                        </p>
+
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <button id="btn-start-mystery" class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold shadow-md flex items-center gap-1.5">
+                                <span>🎲</span> Generate Random Orientation
+                            </button>
+                            <div class="flex items-center space-x-2 text-xs">
+                                <label class="text-slate-400">Nearest Primary Axis:</label>
+                                <select id="mystery-axis-select" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200">
+                                    <option value="001">[001] (4-fold)</option>
+                                    <option value="110">[110] (2-fold)</option>
+                                    <option value="111">[111] (3-fold)</option>
+                                </select>
+                                <button id="btn-check-mystery" class="px-3 py-1 bg-sky-600 hover:bg-sky-500 rounded text-white font-medium">
+                                    Verify Solution
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="mystery-status" class="text-xs text-slate-400 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            Click "Generate Random Orientation" to begin the challenge.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 3: THEORY & FORMULAS -->
+        <section id="tab-section-theory" class="tab-section hidden flex-1 flex flex-col space-y-4">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 shadow-sm space-y-6 max-w-5xl mx-auto w-full">
+                <div>
+                    <h2 class="text-xl font-bold text-white mb-1">Theoretical Principles of Laue X-Ray Diffraction</h2>
+                    <p class="text-xs text-slate-400">Mathematical formulation of reciprocal space, Ewald spheres, and conic section zone projections</p>
+                </div>
+
+                <div class="space-y-4 text-xs text-slate-300 leading-relaxed">
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h3 class="text-sm font-bold text-sky-400">1. Vector Formulation of Bragg's Law & Laue Condition</h3>
+                        <p>
+                            Let \(\hat{s}_0\) be the unit vector along the incident X-ray beam and \(\hat{s}\) be the unit vector along the diffracted ray.
+                            The scattering vector is \(\Delta \vec{k} = \vec{k}' - \vec{k} = \frac{\hat{s} - \hat{s}_0}{\lambda}\).
+                            The diffraction condition states that elastic scattering occurs when the scattering vector equals a reciprocal lattice vector \(\vec{G}_{hkl}\):
+                        </p>
+                        <div class="p-3 bg-slate-900 font-mono text-center text-sky-300 rounded-lg">
+                            \(\hat{s} - \hat{s}_0 = \lambda \vec{G}_{hkl}\)
+                        </div>
+                        <p>
+                            Taking the scalar square on both sides with \(|\hat{s}| = |\hat{s}_0| = 1\):
+                        </p>
+                        <div class="p-3 bg-slate-900 font-mono text-center text-amber-300 rounded-lg">
+                            \(\lambda = \frac{-2(\hat{s}_0 \cdot \vec{G}_{hkl})}{|\vec{G}_{hkl}|^2}\)
+                        </div>
+                        <p>
+                            In polychromatic (white beam) Laue diffraction, the wavelength is not fixed; rather, the crystal automatically selects the unique wavelength \(\lambda\) from the continuous spectrum that satisfies this condition!
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h3 class="text-sm font-bold text-amber-400">2. Duane-Hunt Law & Continuous Bremsstrahlung Spectrum</h3>
+                        <p>
+                            Electrons hitting the anode target decelerate rapidly, converting their kinetic energy \(eV\) into X-ray photons. By conservation of energy, the maximum photon energy corresponds to the minimum wavelength:
+                        </p>
+                        <div class="p-3 bg-slate-900 font-mono text-center text-amber-300 rounded-lg">
+                            \(E_{\max} = h \nu_{\max} = \frac{hc}{\lambda_{\min}} = eV \implies \lambda_{\min} = \frac{hc}{eV} \approx \frac{12.3984}{V \text{ (in kV)}} \text{ Å}\)
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h3 class="text-sm font-bold text-emerald-400">3. Geometric Origin of Zone Conic Sections</h3>
+                        <p>
+                            All crystal planes parallel to a zone axis \([u v w]\) satisfy \(u h + v k + w l = 0\).
+                            If the zone axis makes an angle \(\alpha\) with the incident beam, all diffracted rays form a right circular cone of semi-vertical angle \(\alpha\) coaxial with the zone axis.
+                            The intersection of this cone with a flat detector plate at distance \(D\) produces a conic section:
+                        </p>
+                        <ul class="list-disc list-inside space-y-1 text-slate-400 pl-2">
+                            <li><strong>Transmission Laue:</strong> The forward-scattered cone intersects the plate in an <em>ellipse</em> passing through the direct beam center.</li>
+                            <li><strong>Back-Reflection Laue:</strong> The backward-scattered rays intersect the plate in a <em>hyperbola</em> branch.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: REFLECTIONS TABLE -->
+        <section id="tab-section-table" class="tab-section hidden flex-1 flex flex-col space-y-4">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-sm flex-1 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-800">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <span>📊</span> Active Reflection Catalog
+                        </h2>
+                        <p class="text-xs text-slate-400">Full numerical dataset of active reflections satisfying Laue condition on detector</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <input id="table-search" type="text" placeholder="Search (hkl) or zone..." class="bg-slate-950 border border-slate-700 text-xs text-slate-200 px-3 py-1.5 rounded-lg focus:outline-none focus:border-sky-500 w-48">
+                        <button id="btn-export-csv" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm">
+                            <span>📥</span> Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-x-auto border border-slate-800 rounded-lg">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-950 text-slate-400 border-b border-slate-800 font-mono uppercase text-[10px] sticky top-0">
+                            <tr>
+                                <th class="p-2.5">Indices (hkl)</th>
+                                <th class="p-2.5">λ (Å)</th>
+                                <th class="p-2.5">d-spacing (Å)</th>
+                                <th class="p-2.5">2θ (deg)</th>
+                                <th class="p-2.5">Film (X, Y) mm</th>
+                                <th class="p-2.5">Zone Axis</th>
+                                <th class="p-2.5 text-right">|F| Structure Factor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reflections-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 border border-sky-500/50 text-sky-300 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium transition-all duration-300 opacity-0 pointer-events-none z-50">
+        Notification
+    </div>
+
+    <!-- Scripts -->
+    <script src="physics.js"></script>
+    <script src="render3d.js"></script>
+    <script src="detector.js"></script>
+    <script src="experiments.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
